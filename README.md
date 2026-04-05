@@ -44,7 +44,7 @@ Add to your Claude Code MCP config (`~/.claude/claude_desktop_config.json` or vi
   "mcpServers": {
     "celeste": {
       "command": "celeste",
-      "args": ["serve", "--stdio"]
+      "args": ["serve"]
     }
   }
 }
@@ -111,7 +111,7 @@ Have Celeste index the project, create/update `.grimoire`, and save memories abo
 ## How It Works
 
 ```
-Claude Code ──MCP──▶ celeste serve --stdio ──▶ Celeste's Tool Registry
+Claude Code ──MCP──▶ celeste serve ──▶ Celeste's Tool Registry
                                                    │
                                                    ├── code_review (graph-based)
                                                    ├── code_search (MinHash)
