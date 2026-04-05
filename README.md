@@ -1,4 +1,20 @@
+<div align="center">
+
+<img src="https://s3.whykusanagi.xyz/optimized_assets/hypnosis_expression_trans_ghub.png" alt="Celeste - Corrupted AI Assistant" width="250"/>
+
+<sub>Character artwork by [いかわさ (ikawasa23)](https://x.com/ikawasa23)</sub>
+
 # Celeste for Claude Code
+
+**Graph-based code intelligence for Claude Code via MCP**
+
+[![Requires Celeste CLI](https://img.shields.io/badge/requires-celeste--cli%20v1.8.3+-purple)](https://github.com/whykusanagi/celeste-cli)
+[![MCP](https://img.shields.io/badge/transport-MCP%20stdio-00d4ff)](https://modelcontextprotocol.io)
+[![License](https://img.shields.io/badge/License-MIT-purple)](LICENSE)
+
+</div>
+
+---
 
 Give Claude Code access to [Celeste CLI](https://github.com/whykusanagi/celeste-cli)'s graph-based code intelligence — structural code review, semantic search, dependency analysis, and project context management that goes beyond grep and pattern matching.
 
@@ -122,7 +138,9 @@ Claude Code ──MCP──▶ celeste serve ──▶ Celeste's Tool Registry
                                                    └── 38 tools total
 ```
 
-Claude Code delegates to Celeste via MCP. Celeste runs as a subprocess, indexes the code graph, and uses her full tool suite to analyze the project. Results come back to Claude Code for display.
+Claude Code stays in control and makes focused single-turn calls to Celeste via MCP. Each call runs one tool (code_review, code_search, save_memory) and returns results. Claude does the verification and decision-making — Celeste provides the graph intelligence.
+
+This is intentional: agent mode is a black box, but chat mode gives Claude full visibility into each step.
 
 ## Why Not Just Use grep?
 
