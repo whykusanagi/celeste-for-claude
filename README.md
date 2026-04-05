@@ -8,7 +8,7 @@
 
 **Graph-based code intelligence for Claude Code via MCP**
 
-[![Requires Celeste CLI](https://img.shields.io/badge/requires-celeste--cli%20v1.8.3+-purple)](https://github.com/whykusanagi/celeste-cli)
+[![Requires Celeste CLI](https://img.shields.io/badge/requires-celeste--cli%20v1.8.4+-purple)](https://github.com/whykusanagi/celeste-cli)
 [![MCP](https://img.shields.io/badge/transport-MCP%20stdio-00d4ff)](https://modelcontextprotocol.io)
 [![License](https://img.shields.io/badge/License-MIT-purple)](LICENSE)
 
@@ -122,6 +122,14 @@ Have Celeste index the project, create/update `.grimoire`, and save memories abo
 
 ```
 /celeste-context
+```
+
+### `/celeste-docs` — Documentation Writer
+
+Have Celeste review and rewrite stale docs with her personality while preserving technical depth.
+
+```
+/celeste-docs
 ```
 
 ## How It Works
