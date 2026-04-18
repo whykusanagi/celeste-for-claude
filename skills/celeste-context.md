@@ -1,34 +1,44 @@
 # Celeste Project Context
 
-Have Celeste index the current project and set up persistent context for future sessions.
+Index the current project and gather structural context for future sessions using Celeste's codegraph and code review tools.
+
+**Requires celeste-cli v1.9.0+** — uses `celeste_index`, `celeste_code_review`, and `celeste_code_search` MCP tools directly.
 
 ## Instructions
 
 This is a multi-step workflow. Make separate MCP calls.
 
-### Step 1: Index and get status
+### Step 1: Build the index
 
-```json
-{
-  "prompt": "Index this project's code graph and report stats: total files, symbols, edges, top packages by symbol count.",
-  "mode": "chat",
-  "workspace": "$CWD"
-}
+```
+Call celeste_index with: { "operation": "rebuild", "workspace": "$CWD" }
 ```
 
-### Step 2: Run code review for project overview
+This builds the full code graph from scratch — symbols, edges, MinHash signatures, BM25 token stats. The response reports total files, symbols, edges, and elapsed time. Progress notifications stream back if your MCP client supports `progressToken`.
 
-```json
-{
-  "prompt": "Run code_review with kinds=STUB,PLACEHOLDER,TODO_FIXME and max_results=20. Also use code_search to find the main entry points and core packages.",
-  "mode": "chat",
-  "workspace": "$CWD"
-}
+### Step 2: Check index health
+
+```
+Call celeste_index with: { "operation": "status", "workspace": "$CWD" }
 ```
 
-### Step 3: Save project memories
+Returns total files, symbols, edges, symbols by kind, files by language, and BM25 corpus stats (num_docs, avg_doc_length).
 
-Based on what you learned from steps 1-2, call celeste to save memories:
+### Step 3: Run code review for project overview
+
+```
+Call celeste_code_review with: { "kinds": "STUB,PLACEHOLDER,TODO_FIXME", "max_results": 20, "workspace": "$CWD" }
+```
+
+### Step 4: Find main entry points
+
+```
+Call celeste_code_search with: { "query": "main entry point server app handler", "top_k": 10, "workspace": "$CWD" }
+```
+
+### Step 5: Save project memories
+
+Based on what you learned from steps 2-4, call the `celeste` persona tool to save memories:
 
 ```json
 {
@@ -38,7 +48,7 @@ Based on what you learned from steps 1-2, call celeste to save memories:
 }
 ```
 
-### Step 4: Update grimoire
+### Step 6: Update grimoire
 
 ```json
 {
@@ -48,8 +58,10 @@ Based on what you learned from steps 1-2, call celeste to save memories:
 }
 ```
 
+Note: Steps 5-6 still use the `celeste` persona tool because they need `save_memory` and `write_file`, which are not exposed as direct MCP tools. Steps 1-4 use the direct codegraph tools for speed and verbatim results.
+
 ## What Gets Created
 
-- **Code graph** (`~/.celeste/projects/<hash>/codegraph.db`) — symbols, edges, MinHash signatures
+- **Code graph** (`~/.celeste/projects/<hash>/codegraph.db`) — symbols, edges, MinHash signatures, BM25 token stats
 - **Memories** (`~/.celeste/projects/<hash>/memories/`) — persistent project facts
 - **`.grimoire`** (project root) — auto-stamped with git hash, branch, index stats

@@ -8,7 +8,7 @@
 
 **Graph-based code intelligence for Claude Code via MCP**
 
-[![Requires Celeste CLI](https://img.shields.io/badge/requires-celeste--cli%20v1.8.4+-purple)](https://github.com/whykusanagi/celeste-cli)
+[![Requires Celeste CLI](https://img.shields.io/badge/requires-celeste--cli%20v1.9.0+-purple)](https://github.com/whykusanagi/celeste-cli)
 [![MCP](https://img.shields.io/badge/transport-MCP%20stdio-00d4ff)](https://modelcontextprotocol.io)
 [![License](https://img.shields.io/badge/License-MIT-purple)](LICENSE)
 
@@ -18,6 +18,8 @@
 
 Give Claude Code access to [Celeste CLI](https://github.com/whykusanagi/celeste-cli)'s graph-based code intelligence — structural code review, semantic search, dependency analysis, and project context management that goes beyond grep and pattern matching.
 
+**v1.9.0+:** Skills now use Celeste's **direct codegraph MCP tools** (`celeste_index`, `celeste_code_search`, `celeste_code_review`, `celeste_code_graph`, `celeste_code_symbols`) instead of routing through the chat persona. This means no LLM round-trip, no output truncation, and verbatim structured results.
+
 ## What You Get
 
 Celeste brings capabilities Claude Code doesn't have natively:
@@ -25,8 +27,8 @@ Celeste brings capabilities Claude Code doesn't have natively:
 | Capability | What it does | How it works |
 |---|---|---|
 | **Graph Code Review** | Detect stubs, lazy redirects, error swallowing, placeholders, hardcoded values | Structural analysis via code graph — not grep |
-| **Semantic Code Search** | Find functions by concept, not just name | MinHash similarity on enriched shingles |
-| **Dependency Analysis** | Map package connectivity, find isolated code | Cross-file edge resolution |
+| **Semantic Code Search** | Find functions by concept, not just name | MinHash + BM25 fusion with structural rerank |
+| **Dependency Analysis** | Map package connectivity, find isolated code | Cross-file edge resolution (tree-sitter for TS) |
 | **Project Memory** | Persist learned context across sessions | Per-project memory store |
 | **`.grimoire` Context** | Auto-detected project config with staleness tracking | Git-stamped metadata |
 
@@ -44,8 +46,10 @@ celeste version
 celeste index status  # in any project directory
 ```
 
-You'll need an API key configured for Celeste (xAI/Grok by default):
+You'll need an API key configured for Celeste if you use the persona tools (xAI/Grok by default). The direct codegraph tools (`celeste_index`, `celeste_code_search`, etc.) do **not** require an API key — they run entirely locally against the cached graph.
+
 ```bash
+# Only needed for persona tools (celeste-docs, save_memory, etc.)
 celeste config --set-key YOUR_API_KEY
 ```
 
@@ -135,20 +139,30 @@ Have Celeste review and rewrite stale docs with her personality while preserving
 ## How It Works
 
 ```
-Claude Code ──MCP──▶ celeste serve ──▶ Celeste's Tool Registry
-                                                   │
-                                                   ├── code_review (graph-based)
-                                                   ├── code_search (MinHash)
-                                                   ├── code_graph (edges)
-                                                   ├── code_symbols (symbols)
-                                                   ├── save_memory (persist)
-                                                   ├── read_file, write_file...
-                                                   └── 38 tools total
+                    ┌──── Direct codegraph tools (v1.9.0+) ────┐
+                    │                                          │
+Claude Code ──MCP──▶│  celeste_index        (rebuild/update)   │
+                    │  celeste_code_search   (semantic search)  │
+                    │  celeste_code_review   (structural scan)  │
+                    │  celeste_code_graph    (callers/callees)  │
+                    │  celeste_code_symbols  (file/package list)│
+                    │                                          │
+                    │  → verbatim results, no LLM round-trip   │
+                    └──────────────────────────────────────────┘
+
+                    ┌──── Persona tools (file I/O, memories) ──┐
+                    │                                          │
+Claude Code ──MCP──▶│  celeste { prompt, mode: "chat" }        │──▶ chat LLM
+                    │  celeste_content                          │
+                    │  celeste_status                           │
+                    │                                          │
+                    │  → save_memory, write_file, patch_file   │
+                    └──────────────────────────────────────────┘
 ```
 
-Claude Code stays in control and makes focused single-turn calls to Celeste via MCP. Each call runs one tool (code_review, code_search, save_memory) and returns results. Claude does the verification and decision-making — Celeste provides the graph intelligence.
+The skills in this repo call the **direct codegraph tools** for code intelligence queries (review, search, graph, symbols, index) and fall back to the **persona tool** only when file I/O or memory persistence is needed. Claude stays in control — Celeste provides the graph intelligence and Claude does the verification.
 
-This is intentional: agent mode is a black box, but chat mode gives Claude full visibility into each step.
+Direct tools return verbatim structured output with no `max_tokens` ceiling and no chat-LLM summarization. Progress notifications stream back during long operations (e.g., `celeste_index rebuild`) when your MCP client supports `progressToken`.
 
 ## Why Not Just Use grep?
 

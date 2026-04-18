@@ -2,41 +2,39 @@
 
 Run Celeste's graph-based code review on the current project. Uses structural analysis of the code graph — not grep — to detect issues that pattern matching alone can't find.
 
+**Requires celeste-cli v1.9.0+** — uses the direct `celeste_code_review` MCP tool (no chat-LLM round-trip, no output truncation).
+
 ## Instructions
 
 This is a multi-step workflow. Make separate MCP calls for each step — do NOT use agent mode.
 
-### Step 1: Run the review
+### Step 1: Ensure the index is current
 
-Call the celeste MCP tool:
+If code has changed since the last index, update first:
 
-```json
-{
-  "prompt": "Run code_review with kinds=ALL and max_results=50. Return the raw JSON findings.",
-  "mode": "chat",
-  "workspace": "$CWD"
-}
+```
+Call celeste_index with: { "operation": "update", "workspace": "$CWD" }
 ```
 
-### Step 2: Verify findings
+If no index exists yet, use `"operation": "rebuild"` instead. You can check with `"operation": "status"`.
+
+### Step 2: Run the review
+
+Call the `celeste_code_review` MCP tool directly:
+
+```
+Call celeste_code_review with: { "kinds": "ALL", "max_results": 50, "workspace": "$CWD" }
+```
+
+This returns the raw findings as verbatim JSON — no chat-LLM summarization, no `max_tokens` ceiling. The response is the full `code_review` output exactly as Celeste computed it.
+
+### Step 3: Verify findings
 
 For each STUB or PLACEHOLDER finding, verify it yourself:
 - Use Grep to search for the function name across all files — if callers exist, it's a false positive
 - Check for build-tag file pairs (e.g., `_windows.go` + `_nonwindows.go`) with Glob
 - Go `init()` functions have no callers by design — always false positive for STUB
 - Functions assigned to struct fields or passed as callbacks may show zero graph edges but are actively used
-
-### Step 3: Save findings as memories
-
-For each verified category, call celeste to save a memory:
-
-```json
-{
-  "prompt": "save_memory with name='code-review-findings', type='project', content='<your verified summary>'",
-  "mode": "chat",
-  "workspace": "$CWD"
-}
-```
 
 ### Step 4: Present to user
 
