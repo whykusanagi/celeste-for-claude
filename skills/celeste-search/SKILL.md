@@ -1,3 +1,8 @@
+---
+name: celeste-search
+description: Use when you need to find code by concept rather than exact name — MinHash Jaccard + BM25 rank fusion with structural reranking finds related functions even when they don't contain the search term. Requires celeste-cli v1.9.0+ and calls the direct celeste_code_search MCP tool.
+---
+
 # Celeste Semantic Search
 
 Search the codebase by concept using Celeste's semantic search. Finds functions related to a concept even if they don't contain the exact search term. Uses MinHash Jaccard + BM25 rank fusion with structural reranking.

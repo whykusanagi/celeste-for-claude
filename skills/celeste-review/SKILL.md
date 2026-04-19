@@ -1,3 +1,8 @@
+---
+name: celeste-review
+description: Use when you need structural code review that finds stubs, lazy redirects, placeholders, swallowed errors, TODOs, and hardcoded values via call-graph analysis instead of grep — requires celeste-cli v1.9.0+ and calls the direct celeste_code_review MCP tool for verbatim results
+---
+
 # Celeste Code Review
 
 Run Celeste's graph-based code review on the current project. Uses structural analysis of the code graph — not grep — to detect issues that pattern matching alone can't find.
@@ -27,6 +32,12 @@ Call celeste_code_review with: { "kinds": "ALL", "max_results": 50, "workspace":
 ```
 
 This returns the raw findings as verbatim JSON — no chat-LLM summarization, no `max_tokens` ceiling. The response is the full `code_review` output exactly as Celeste computed it.
+
+**Parameters:**
+- `kinds` — comma-separated categories, or `"ALL"`. Valid: `LAZY_REDIRECT`, `STUB`, `PLACEHOLDER`, `TODO_FIXME`, `EMPTY_HANDLER`, `HARDCODED`.
+- `max_results` — per-category cap (default 30). Raise to 50-100 on large codebases to avoid truncation per kind.
+- `include_tests` — boolean, default `false`. Test files are filtered out by default (they naturally contain stubs and TODOs). Set to `true` only when auditing test quality itself.
+- `workspace` — absolute path to the project root.
 
 ### Step 3: Verify findings
 

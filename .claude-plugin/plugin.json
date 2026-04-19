@@ -1,0 +1,22 @@
+{
+  "name": "celeste-for-claude",
+  "version": "1.9.1",
+  "description": "Graph-based code intelligence skills for Claude Code via MCP — structural code review, semantic search, dependency analysis, project context, documentation maintenance, and persona-voiced content generation powered by Celeste CLI's code graph",
+  "author": {
+    "name": "whykusanagi",
+    "url": "https://whykusanagi.xyz"
+  },
+  "homepage": "https://github.com/whykusanagi/celeste-for-claude",
+  "repository": "https://github.com/whykusanagi/celeste-for-claude",
+  "license": "MIT",
+  "keywords": [
+    "code-review",
+    "semantic-search",
+    "dependency-graph",
+    "code-intelligence",
+    "mcp",
+    "celeste",
+    "documentation"
+  ],
+  "category": "development"
+}

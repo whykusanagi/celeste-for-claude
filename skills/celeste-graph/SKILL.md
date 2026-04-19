@@ -1,3 +1,8 @@
+---
+name: celeste-graph
+description: Use when you need to trace callers, callees, references, or package connectivity in a codebase — structural dependency analysis via Celeste's code graph. Requires celeste-cli v1.9.0+ and calls the direct celeste_code_graph and celeste_code_symbols MCP tools.
+---
+
 # Celeste Dependency Graph
 
 Analyze the codebase's structural relationships using Celeste's code graph — callers, callees, references, and package connectivity.
@@ -17,10 +22,14 @@ Call celeste_index with: { "operation": "update", "workspace": "$CWD" }
 To analyze a specific symbol's callers and callees:
 
 ```
-Call celeste_code_graph with: { "symbol": "<SYMBOL_NAME>", "direction": "both", "workspace": "$CWD" }
+Call celeste_code_graph with: { "symbol": "<SYMBOL_NAME>", "direction": "both", "depth": 1, "workspace": "$CWD" }
 ```
 
-`direction` options: `"callers"` (who calls this), `"callees"` (what this calls), `"both"`.
+**Parameters:**
+- `symbol` (required) — symbol name. If you only know the concept, run `celeste_code_search` first and use a result's `Symbol` field.
+- `direction` — `"callers"` (who calls this), `"callees"` (what this calls), or `"both"` (default).
+- `depth` — number of hops to traverse (default 1, **max 3**). Use `depth: 2` or `3` for transitive reach when tracing how a change propagates. Deeper traversals return more results; start shallow.
+- `workspace` — absolute path to the project root.
 
 ### Step 3: List symbols in a file or package
 

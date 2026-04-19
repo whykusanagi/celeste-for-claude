@@ -72,20 +72,18 @@ Add to your Claude Code MCP config (`~/.claude/claude_desktop_config.json` or vi
 
 ### 2. Install the Skills
 
-Copy the skill files to your Claude Code commands directory:
+Copy the skill directories into your Claude Code skills directory:
 
 ```bash
 # Clone this repo
 git clone https://github.com/whykusanagi/celeste-for-claude.git
 
-# Copy skills
-cp celeste-for-claude/skills/*.md ~/.claude/commands/
+# Install as user-level skills
+mkdir -p ~/.claude/skills
+cp -R celeste-for-claude/skills/* ~/.claude/skills/
 ```
 
-Or install globally:
-```bash
-cp celeste-for-claude/skills/*.md ~/.claude/commands/
-```
+Each skill lives in its own directory under `skills/<skill-name>/SKILL.md` with proper frontmatter, so Claude Code loads them via the `Skill` tool (not as slash commands).
 
 ## Available Skills
 
@@ -128,13 +126,23 @@ Have Celeste index the project, create/update `.grimoire`, and save memories abo
 /celeste-context
 ```
 
-### `/celeste-docs` — Documentation Writer
+### `/celeste-docs` — Documentation Maintainer
 
-Have Celeste review and rewrite stale docs with her personality while preserving technical depth.
+Keep existing markdown docs from drifting. Patches section-by-section to fix stale versions, wrong counts, and dead references — without summarizing away code examples and technical depth.
 
 ```
 /celeste-docs
 ```
+
+### `/celeste-content` — Content Generator
+
+Generate new prose in Celeste's voice — filling a stub, drafting a README intro, writing a commit message, or producing a social post. Returns styled text for you to place; does not write files itself.
+
+```
+/celeste-content
+```
+
+**Docs vs Content:** `celeste-docs` **maintains** existing files surgically. `celeste-content` **generates** new prose for blank spots. Use docs to prevent drift; use content to fill stubs.
 
 ## How It Works
 

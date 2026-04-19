@@ -1,3 +1,8 @@
+---
+name: celeste-context
+description: Use when setting up a new project with Celeste — builds the code graph index, runs an initial structural review, finds entry points, saves persistent project memories, and updates the .grimoire context file. Requires celeste-cli v1.9.0+.
+---
+
 # Celeste Project Context
 
 Index the current project and gather structural context for future sessions using Celeste's codegraph and code review tools.
@@ -7,6 +12,25 @@ Index the current project and gather structural context for future sessions usin
 ## Instructions
 
 This is a multi-step workflow. Make separate MCP calls.
+
+### Step 0: Pre-flight check
+
+Before indexing, confirm the MCP server is live and which providers are loaded:
+
+```
+Call celeste_status with: {}
+```
+
+`celeste_status` takes **no parameters** — no `workspace`, no body fields. Returns connected providers (xAI/Grok, Anthropic, etc.), whether a `.grimoire` is loaded for this workspace, which project is currently indexed, and accumulated session cost.
+
+**If providers are missing**, the persona steps (5 and 6) will fail. Fix by running on the command line (not via MCP):
+
+```bash
+celeste config --set-key YOUR_API_KEY       # set API key
+celeste config --set-model grok-4-1-fast    # optional: change model
+```
+
+Config lives at `~/.celeste/config.json`. The codegraph steps (1-4) do **not** require an API key and will work without this fix, so you can proceed with indexing and review even if providers are unloaded — you'll just need to skip steps 5 and 6.
 
 ### Step 1: Build the index
 

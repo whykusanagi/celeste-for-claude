@@ -1,6 +1,15 @@
-# Celeste Documentation Writer
+---
+name: celeste-docs
+description: Use when MAINTAINING existing markdown docs to prevent drift — detects stale versions, wrong counts, dead references, then patches section-by-section via Celeste's persona tool so surrounding content, code examples, and technical depth are preserved. Does NOT rewrite whole files, does NOT generate new content from stubs — for that, use celeste-content instead.
+---
 
-Have Celeste review and personalize documentation files while preserving technical depth.
+# Celeste Documentation Maintainer
+
+Keep existing documentation honest as the code underneath it evolves. This skill scans markdown files for staleness (wrong versions, dead references, summarized-away technical content) and applies surgical per-section patches.
+
+**Key distinction:**
+- `celeste-docs` (this skill) — maintains files that already exist, preventing drift and destructive rewrites
+- `celeste-content` — generates new prose for stubs, empty sections, or fresh files (does not touch disk itself)
 
 ## Instructions
 
