@@ -1,0 +1,20 @@
+{
+  "name": "celeste-for-claude",
+  "owner": {
+    "name": "whykusanagi",
+    "url": "https://whykusanagi.xyz"
+  },
+  "metadata": {
+    "description": "Graph-based code intelligence skills for Claude Code via MCP, powered by Celeste CLI",
+    "version": "1.10.0"
+  },
+  "plugins": [
+    {
+      "name": "celeste-for-claude",
+      "source": "./",
+      "description": "Structural code review, semantic search, dependency analysis, project context, docs maintenance, and persona-voiced content generation via Celeste CLI's code graph.",
+      "version": "1.10.0",
+      "strict": true
+    }
+  ]
+}
