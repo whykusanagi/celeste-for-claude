@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Tests for install.sh. Runs it against a sandboxed $HOME with a fake celeste
 # binary; asserts merge / backup / idempotency / symlink / resolution behavior.
+# No -e: tests must keep running after a `fail` to report all results.
 set -uo pipefail
 
 HERE="$(cd "$(dirname "$0")/.." && pwd)"
@@ -10,7 +11,7 @@ fail() { echo "  FAIL: $1"; FAIL=$((FAIL+1)); }
 ok()   { echo "  ok:   $1"; PASS=$((PASS+1)); }
 
 new_sandbox() {
-  SBX="$(mktemp -d)"
+  SBX="$(mktemp -d)"; trap 'rm -rf "$SBX"' EXIT
   FAKEBIN="$SBX/fakebin"; mkdir -p "$FAKEBIN"
   printf '#!/bin/sh\necho celeste\n' > "$FAKEBIN/celeste"; chmod +x "$FAKEBIN/celeste"
   DESKTOP="$SBX/Library/Application Support/Claude/claude_desktop_config.json"
@@ -72,6 +73,13 @@ mkdir -p "$SBX/.local/bin"
 printf '#!/bin/sh\necho celeste\n' > "$SBX/.local/bin/celeste"; chmod +x "$SBX/.local/bin/celeste"
 out="$(HOME="$SBX" PATH="/usr/bin:/bin" bash "$INSTALL" --client claude-desktop 2>&1)" || true
 echo "$out" | grep -q "/.local/bin/celeste" && ok "resolved ~/.local/bin/celeste" || fail "did not resolve ~/.local/bin: $out"
+
+echo "Test 8: --client claude-code writes ~/.claude.json, preserves top-level keys"
+new_sandbox
+printf '{\n  "numStartups": 7,\n  "mcpServers": {\n    "other": {"command": "x", "args": []}\n  }\n}\n' > "$SBX/.claude.json"
+run --client claude-code >/dev/null 2>&1
+python3 -c 'import json,sys;d=json.load(open(sys.argv[1]));m=d["mcpServers"];assert d.get("numStartups")==7 and "other" in m and m["celeste"]["command"].startswith("/") and m["celeste"]["args"]==["serve"]' "$SBX/.claude.json" \
+  && ok "claude-code path preserves top-level keys + other servers, adds celeste" || fail "claude-code path wrong"
 
 echo
 echo "PASS=$PASS FAIL=$FAIL"

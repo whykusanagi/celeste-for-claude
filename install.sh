@@ -31,7 +31,9 @@ EOF
 
 while [ $# -gt 0 ]; do
   case "$1" in
-    --client) CLIENT="${2:-}"; shift 2 ;;
+    --client)
+      [ -n "${2:-}" ] || { echo "--client requires a value" >&2; exit 1; }
+      CLIENT="$2"; shift 2 ;;
     --dry-run) DRY_RUN=1; shift ;;
     --help|-h) usage; exit 0 ;;
     *) echo "unknown arg: $1" >&2; usage >&2; exit 1 ;;
@@ -90,12 +92,15 @@ if os.path.exists(file):
         with open(file, encoding="utf-8") as f: cfg = json.load(f)
     except Exception as e:
         print(f"  skipped   {label} (not valid JSON: {e})"); sys.exit(0)
-if not isinstance(cfg, dict): cfg = {}
+if not isinstance(cfg, dict):
+    print(f"  skipped   {label} (unexpected JSON type: {type(cfg).__name__})"); sys.exit(0)
 cfg.setdefault("mcpServers", {})
 cfg["mcpServers"][name] = {"command": binpath, "args": ["serve"]}
 out = json.dumps(cfg, indent=2) + "\n"
-if os.path.exists(file) and open(file, encoding="utf-8").read() == out:
-    print(f"  unchanged {label}"); sys.exit(0)
+if os.path.exists(file):
+    with open(file, encoding="utf-8") as f:
+        if f.read() == out:
+            print(f"  unchanged {label}"); sys.exit(0)
 if dry:
     print(f"  would write {label}:")
     print("\n".join("    " + l for l in out.splitlines())); sys.exit(0)
