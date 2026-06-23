@@ -63,6 +63,17 @@ enough). The entry it writes:
 }
 ```
 
+## Verify it connected
+
+**Claude Code:**
+```bash
+claude mcp list   # celeste should show "✔ Connected"
+```
+
+**Claude Desktop:** after the Cmd-Q restart, open a chat and check the tools/MCP
+menu — `celeste` and its `celeste_*` tools should be listed. If the server failed
+to start, Desktop shows it as disconnected there.
+
 ## Troubleshooting
 
 **`Failed to spawn process: No such file or directory`** — the configured path

@@ -18,7 +18,7 @@
 
 Give Claude Code access to [Celeste CLI](https://github.com/whykusanagi/celeste-cli)'s graph-based code intelligence — structural code review, semantic search, dependency analysis, and project context management that goes beyond grep and pattern matching.
 
-**v1.9.0+:** Skills now use Celeste's **direct codegraph MCP tools** (`celeste_index`, `celeste_code_search`, `celeste_code_review`, `celeste_code_graph`, `celeste_code_symbols`) instead of routing through the chat persona. This means no LLM round-trip, no output truncation, and verbatim structured results.
+**v1.9.0+:** Skills now use Celeste's **direct codegraph MCP tools** (`celeste_index`, `celeste_code_search`, `celeste_code_review`, `celeste_code_graph`, `celeste_code_symbols`) instead of routing through the chat persona. Results come back verbatim and structured, with no LLM round-trip and no output truncation.
 
 ## What You Get
 
@@ -56,7 +56,7 @@ celeste index status   # in any project directory
 
 You'll need an API key configured only if you use the persona tools (xAI/Grok by
 default). The direct codegraph tools (`celeste_index`, `celeste_code_search`, etc.)
-run entirely locally and need no key.
+run locally and need no key.
 
 ```bash
 celeste config --set-key YOUR_API_KEY   # only for persona tools
@@ -194,7 +194,7 @@ Claude Code ──MCP──▶│  celeste { prompt, mode: "chat" }        │�
                     └──────────────────────────────────────────┘
 ```
 
-The skills in this repo call the **direct codegraph tools** for code intelligence queries (review, search, graph, symbols, index) and fall back to the **persona tool** only when file I/O or memory persistence is needed. Claude stays in control — Celeste provides the graph intelligence and Claude does the verification.
+The skills in this repo call the **direct codegraph tools** for code intelligence queries (review, search, graph, symbols, index) and fall back to the **persona tool** only when file I/O or memory persistence is needed. Celeste provides the graph intelligence; Claude does the verification and stays in control.
 
 Direct tools return verbatim structured output with no `max_tokens` ceiling and no chat-LLM summarization. Progress notifications stream back during long operations (e.g., `celeste_index rebuild`) when your MCP client supports `progressToken`.
 
@@ -202,9 +202,9 @@ Direct tools return verbatim structured output with no `max_tokens` ceiling and 
 
 Celeste's code review uses **structural graph analysis**:
 
-- A function named `handlePayment` with zero outgoing call edges? That's suspicious — the name implies action but the structure shows passivity.
-- A function that calls `db.Exec()` but assigns the error to `_`? That's a swallowed error — detected by body analysis combined with edge counting.
-- A TODO in a function called by 20 others scores higher than one in dead code — impact-aware prioritization.
+- A function named `handlePayment` with zero outgoing call edges? That's suspicious: the name implies action, the structure shows none.
+- A function that calls `db.Exec()` but assigns the error to `_`? That's a swallowed error, caught by body analysis combined with edge counting.
+- A TODO in a function called by 20 others scores higher than one in dead code (impact-aware prioritization).
 
 grep finds text. Celeste understands structure.
 
