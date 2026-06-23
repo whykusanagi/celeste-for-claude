@@ -7,6 +7,8 @@ description: Use when MAINTAINING existing markdown docs to prevent drift — de
 
 Keep existing documentation honest as the code underneath it evolves. This skill scans markdown files for staleness (wrong versions, dead references, summarized-away technical content) and applies surgical per-section patches.
 
+**Requires celeste-cli v1.9.0+** — uses the `celeste` persona tool in `mode: "chat"`, which needs a configured AI provider (unlike the direct `celeste_*` codegraph tools, this one is not local-only). If a call errors or returns empty, run `celeste_status` to confirm providers are loaded, or set a key with `celeste config --set-key <KEY>` on the command line.
+
 **Key distinction:**
 - `celeste-docs` (this skill) — maintains files that already exist, preventing drift and destructive rewrites
 - `celeste-content` — generates new prose for stubs, empty sections, or fresh files (does not touch disk itself)

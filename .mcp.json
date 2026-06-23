@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "celeste": {
+      "command": "celeste",
+      "args": ["serve"]
+    }
+  }
+}

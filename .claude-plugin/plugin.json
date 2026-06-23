@@ -1,6 +1,6 @@
 {
   "name": "celeste-for-claude",
-  "version": "1.9.1",
+  "version": "1.11.0",
   "description": "Graph-based code intelligence skills for Claude Code via MCP — structural code review, semantic search, dependency analysis, project context, documentation maintenance, and persona-voiced content generation powered by Celeste CLI's code graph",
   "author": {
     "name": "whykusanagi",
