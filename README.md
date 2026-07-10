@@ -88,20 +88,20 @@ claude mcp add celeste --scope user -- celeste serve
 
 **Claude Desktop** (GUI — does **not** inherit your shell `PATH`):
 Claude Desktop launches the server without your shell environment, so a bare
-`celeste` won't be found — it needs the binary's **absolute** path. Run the
-installer, which resolves it for you and merges it into
-`~/Library/Application Support/Claude/claude_desktop_config.json`:
+`celeste` won't be found — it needs the binary's **absolute** path. Celeste
+installs itself: `celeste mcp install` self-locates the binary and merges an
+entry into `~/Library/Application Support/Claude/claude_desktop_config.json`.
 
 ```bash
-git clone https://github.com/whykusanagi/celeste-for-claude.git
-cd celeste-for-claude
-./install.sh                 # writes the absolute path; --dry-run to preview
+celeste mcp install                # requires celeste v1.12.1+
+celeste mcp install --dry-run      # preview without writing
+celeste mcp install --client all   # also wire Claude Code, Cursor, Celeste
 ```
 
-It preserves any other MCP servers, backs the file up to `.bak`, and is safe to
-**re-run** any time you reinstall or move the binary (it repairs the path). Then
-fully quit and reopen Claude Desktop (Cmd-Q) to load it. The resulting entry looks
-like:
+It preserves any other MCP servers, backs the file up to `.bak`, refuses to
+write through a symlink, and is safe to **re-run** any time you reinstall or move
+the binary (it repairs the path). Then fully quit and reopen Claude Desktop
+(Cmd-Q) to load it. The resulting entry looks like:
 
 ```json
 {
@@ -110,6 +110,13 @@ like:
   }
 }
 ```
+
+> **On celeste older than v1.12.1**, use the bundled `./install.sh` instead — same
+> behavior, superseded by the built-in command:
+> ```bash
+> git clone https://github.com/whykusanagi/celeste-for-claude.git
+> cd celeste-for-claude && ./install.sh   # --dry-run to preview
+> ```
 
 See [INSTALL.md](INSTALL.md) for per-client detail and troubleshooting.
 
