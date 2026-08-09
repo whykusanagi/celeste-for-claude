@@ -98,6 +98,36 @@ restart the client.
 **Server connects but tools are missing** — confirm the binary works standalone:
 `celeste version`, and `celeste serve` should start and wait on stdio.
 
+**Tools work but behave like an older version** — the most common and least
+obvious failure. Your MCP client spawns the server **once** and keeps that
+process alive, so reinstalling the binary does not touch an already-running
+server. The config can point at a brand-new binary while the live process is
+weeks old.
+
+Ask Celeste for `celeste_status` and compare the `commit` it reports against the
+binary you installed:
+
+```bash
+celeste version    # e.g. Celeste CLI 1.15.0 (bubbletea-tui) [v1.15.0-3-g4078dec]
+```
+
+If the two differ, the server is stale — **fully restart the client** (Cmd-Q on
+Claude Desktop; exit and relaunch Claude Code). Re-running `celeste mcp install`
+will not help: it rewrites config, and the stale process is already running.
+
+> Requires celeste **v1.15.0+**. Older builds report only a version string, which
+> is a release constant — it reads identically for a shipped release and a local
+> build many commits ahead, so a stale server is invisible there. If `commit` is
+> missing or `unknown`, the binary was built without a stamp (a bare `go build`
+> rather than `make install` or a release download).
+
+**Two `celeste` binaries on your PATH** — `which -a celeste` shows them. A
+leftover `~/go/bin/celeste` from an old `go install` can shadow, or be shadowed
+by, `~/.local/bin/celeste`, so a direct CLI call and the MCP server can end up
+running different builds. `celeste mcp install` writes an **absolute** path,
+which makes the MCP side immune to PATH order; delete the stale copy to fix the
+CLI side.
+
 **Editing the config by hand** — the file is
 `~/Library/Application Support/Claude/claude_desktop_config.json` (note: under
 `~/Library/...`, **not** `~/.claude/`). Use an absolute `command` path.
