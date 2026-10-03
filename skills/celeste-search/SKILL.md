@@ -1,13 +1,13 @@
 ---
 name: celeste-search
-description: Use when you need to find code by concept rather than exact name — MinHash Jaccard + BM25 rank fusion with structural reranking finds related functions even when they don't contain the search term. Requires celeste-cli v1.9.0+ and calls the direct celeste_code_search MCP tool.
+description: Use when you need to find code by concept rather than exact name — MinHash Jaccard + BM25 rank fusion with structural reranking finds related functions even when they don't contain the search term. Requires celeste-cli v2.0.0+ and calls the direct celeste_code_search MCP tool.
 ---
 
 # Celeste Semantic Search
 
 Search the codebase by concept using Celeste's semantic search. Finds functions related to a concept even if they don't contain the exact search term. Uses MinHash Jaccard + BM25 rank fusion with structural reranking.
 
-**Requires celeste-cli v1.9.0+** — uses the direct `celeste_code_search` MCP tool (no chat-LLM round-trip, no output truncation).
+**Requires celeste-cli v2.0.0+** — uses the direct `celeste_code_search` MCP tool (no chat-LLM round-trip, no output truncation).
 
 ## Instructions
 
@@ -25,7 +25,7 @@ Call the `celeste_code_search` MCP tool directly:
 Call celeste_code_search with: { "query": "<USER_QUERY>", "top_k": 10, "workspace": "$CWD" }
 ```
 
-Replace `<USER_QUERY>` with the user's search terms. The response includes:
+Replace `<USER_QUERY>` with the user's search terms. `top_k` sets how many results come back (default 10; celeste 2.0 honours it and caps it at 100). The response includes:
 - Similarity score (Jaccard %) and BM25 score for each result
 - `MatchedTokens` — which query terms actually hit this symbol
 - `EdgeCount` — how well-connected the symbol is in the call graph

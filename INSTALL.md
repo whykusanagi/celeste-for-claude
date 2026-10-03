@@ -9,15 +9,23 @@ wire it depends on the client. The one rule that causes most breakage:
 
 ## Prerequisite: install the binary
 
+This plugin needs celeste-cli **v2.0.0+**. 2.0's Go module path ends in `/v2`;
+the old path without it still installs the last 1.x release.
+
 ```bash
-go install github.com/whykusanagi/celeste-cli/cmd/celeste@latest   # -> ~/go/bin
+go install github.com/whykusanagi/celeste-cli/v2/cmd/celeste@latest   # -> ~/go/bin
+# or a signed binary from https://github.com/whykusanagi/celeste-cli/releases
+#   (verify it as described in celeste-cli's VERIFY.md)
 # or, from a checkout, macOS-safe + codesigned:
 git clone https://github.com/whykusanagi/celeste-cli.git && cd celeste-cli && make install   # -> ~/.local/bin
 ```
 
-Confirm it's on your `PATH`:
+Confirm it's on your `PATH`, and (for a `go install` build) install the official
+binary before an MCP client launches it, since `celeste serve` doesn't replace
+itself mid-run:
 ```bash
-command -v celeste && celeste version
+command -v celeste && celeste version   # 2.x
+celeste update
 ```
 
 ## Claude Code
@@ -35,8 +43,14 @@ claude mcp add celeste --scope user -- celeste serve
 
 ## Claude Desktop
 
-Desktop has no `mcp add` CLI and won't see your `PATH`, so use the installer to
-write the absolute path:
+Desktop has no `mcp add` CLI and won't see your `PATH`, so the config needs the
+absolute path. celeste writes it itself:
+
+```bash
+celeste mcp install --client claude-desktop   # --dry-run to preview
+```
+
+Or use this repo's installer, which does the same:
 
 ```bash
 git clone https://github.com/whykusanagi/celeste-for-claude.git
@@ -78,7 +92,7 @@ to start, Desktop shows it as disconnected there.
 
 **`Failed to spawn process: No such file or directory`** — the configured path
 points at a binary that no longer exists (e.g. you moved from `~/go/bin` to
-`~/.local/bin`). Fix: re-run `./install.sh` to rewrite the absolute path, then
+`~/.local/bin`). Fix: re-run `celeste mcp install` (or `./install.sh`) to rewrite the absolute path, then
 restart the client.
 
 **Server connects but tools are missing** — confirm the binary works standalone:

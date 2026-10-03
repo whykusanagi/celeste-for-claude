@@ -1,13 +1,13 @@
 ---
 name: celeste-graph
-description: Use when you need to trace callers, callees, references, or package connectivity in a codebase — structural dependency analysis via Celeste's code graph. Requires celeste-cli v1.9.0+ and calls the direct celeste_code_graph and celeste_code_symbols MCP tools.
+description: Use when you need to trace callers, callees, references, or package connectivity in a codebase — structural dependency analysis via Celeste's code graph. Requires celeste-cli v2.0.0+ and calls the direct celeste_code_graph and celeste_code_symbols MCP tools.
 ---
 
 # Celeste Dependency Graph
 
 Analyze the codebase's structural relationships using Celeste's code graph — callers, callees, references, and package connectivity.
 
-**Requires celeste-cli v1.9.0+** — uses the direct `celeste_code_graph` and `celeste_code_symbols` MCP tools.
+**Requires celeste-cli v2.0.0+** — uses the direct `celeste_code_graph` and `celeste_code_symbols` MCP tools.
 
 ## Instructions
 

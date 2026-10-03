@@ -1,13 +1,13 @@
 ---
 name: celeste-context
-description: Use when setting up a new project with Celeste — builds the code graph index, runs an initial structural review, finds entry points, saves persistent project memories, and updates the .grimoire context file. Requires celeste-cli v1.9.0+.
+description: Use when setting up a new project with Celeste — builds the code graph index, runs an initial structural review, finds entry points, saves persistent project memories, and updates the .grimoire context file. Requires celeste-cli v2.0.0+.
 ---
 
 # Celeste Project Context
 
 Index the current project and gather structural context for future sessions using Celeste's codegraph and code review tools.
 
-**Requires celeste-cli v1.9.0+** — uses `celeste_index`, `celeste_code_review`, and `celeste_code_search` MCP tools directly.
+**Requires celeste-cli v2.0.0+** — uses `celeste_index`, `celeste_code_review`, and `celeste_code_search` MCP tools directly.
 
 ## Instructions
 
@@ -21,13 +21,13 @@ Before indexing, confirm the MCP server is live and which providers are loaded:
 Call celeste_status with: {}
 ```
 
-`celeste_status` takes **no parameters** — no `workspace`, no body fields. Returns connected providers (xAI/Grok, Anthropic, etc.), whether a `.grimoire` is loaded for this workspace, which project is currently indexed, and accumulated session cost.
+Call `celeste_status` with `{}` — it takes no `workspace`. (Its optional `run_id` / `cancel` arguments report on a background agent run; you don't need them here.) Returns connected providers (Sakana/Fugu by default, xAI/Grok, Anthropic, etc.), whether a `.grimoire` is loaded for this workspace, which project is currently indexed, and accumulated session cost.
 
 **If providers are missing**, the persona steps (5 and 6) will fail. Fix by running on the command line (not via MCP):
 
 ```bash
-celeste config --set-key YOUR_API_KEY       # set API key
-celeste config --set-model grok-4-1-fast    # optional: change model
+celeste config --set-key YOUR_API_KEY       # set API key (Sakana/Fugu by default)
+celeste config --set-model fugu-ultra       # optional: change model
 ```
 
 Config lives at `~/.celeste/config.json`. The codegraph steps (1-4) do **not** require an API key and will work without this fix, so you can proceed with indexing and review even if providers are unloaded — you'll just need to skip steps 5 and 6.
@@ -74,6 +74,8 @@ Based on what you learned from steps 2-4, call the `celeste` persona tool to sav
 
 ### Step 6: Update grimoire
 
+celeste 2.0 no longer creates `.grimoire` on its own. If the project has none, create it first by running `celeste init` in the project root on the command line (`celeste init --agents` also writes `AGENTS.md`), or ask the user to.
+
 ```json
 {
   "prompt": "Read the current .grimoire file, then update it with an Architecture section describing the project structure, key packages, and entry points. Use write_file to save.",
@@ -88,4 +90,4 @@ Note: Steps 5-6 still use the `celeste` persona tool because they need `save_mem
 
 - **Code graph** (`~/.celeste/projects/<hash>/codegraph.db`) — symbols, edges, MinHash signatures, BM25 token stats
 - **Memories** (`~/.celeste/projects/<hash>/memories/`) — persistent project facts
-- **`.grimoire`** (project root) — auto-stamped with git hash, branch, index stats
+- **`.grimoire`** (project root) — written by `celeste init` (2.0 never creates it unprompted), stamped with git hash and branch

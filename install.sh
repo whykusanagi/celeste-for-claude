@@ -63,7 +63,7 @@ resolve_celeste() {
 if ! CELESTE_BIN="$(resolve_celeste)"; then
   cat >&2 <<'EOF'
 celeste binary not found. Install it first:
-    go install github.com/whykusanagi/celeste-cli/cmd/celeste@latest   # -> ~/go/bin
+    go install github.com/whykusanagi/celeste-cli/v2/cmd/celeste@latest   # -> ~/go/bin
   or from a celeste-cli checkout:
     make install                                                       # -> ~/.local/bin (codesigned)
   Ensure that directory is on your PATH, then re-run ./install.sh

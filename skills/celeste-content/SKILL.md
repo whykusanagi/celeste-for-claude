@@ -7,7 +7,7 @@ description: Use when you have an empty stub, blank section, or need to generate
 
 Generate new content in Celeste's voice using the `celeste_content` MCP tool. Unlike `celeste-docs` (which patches existing files in-place), this tool just returns styled text — you decide where to put it.
 
-**Requires celeste-cli v1.9.0+** — uses the direct `celeste_content` MCP tool.
+**Requires celeste-cli v2.0.0+** — uses the direct `celeste_content` MCP tool.
 
 ## When to use this vs celeste-docs
 
@@ -42,7 +42,7 @@ Call celeste_content with: { "prompt": "<WHAT_TO_GENERATE>", "format": "markdown
 
 **Note:** Unlike the codegraph tools (`celeste_code_search`, `celeste_index`, etc.), `celeste_content` does **not** take a `workspace` parameter — it generates standalone prose, not workspace-specific queries.
 
-If the call errors or returns empty, the persona provider (xAI/Grok by default) is likely misconfigured. Run `celeste_status` to confirm providers are loaded, or re-run `celeste config --set-key <KEY>` on the command line.
+If the call errors or returns empty, the persona provider (Sakana/Fugu by default) is likely misconfigured. Run `celeste_status` to confirm providers are loaded, or re-run `celeste config --set-key <KEY>` on the command line.
 
 The response is the generated text — already styled in Celeste's persona voice.
 
@@ -78,7 +78,7 @@ Draft a 500-word markdown blog post about why graph-based code review finds bugs
 ## Why Not Just Use Claude?
 
 You can. But `celeste_content` has two advantages:
-1. **Persona consistency** — all Celeste-flavored content has the same voice, which matters for docs/social posts under a single brand.
+1. **Persona consistency** — all Celeste-flavored content has the same voice, which matters for docs/social posts under a single brand. In celeste 2.0 the full persona ships only in official release binaries; a build from a checkout or a fork runs a short public persona (`celeste persona verify` tells you which you have).
 2. **Separation of concerns** — content generation uses Celeste's chat LLM; Claude Code stays clean for orchestration, editing, and verification.
 
 If you want generic content, Claude Code handles it directly.

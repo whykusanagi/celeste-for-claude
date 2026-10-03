@@ -7,7 +7,7 @@ description: Use when MAINTAINING existing markdown docs to prevent drift — de
 
 Keep existing documentation honest as the code underneath it evolves. This skill scans markdown files for staleness (wrong versions, dead references, summarized-away technical content) and applies surgical per-section patches.
 
-**Requires celeste-cli v1.9.0+** — uses the `celeste` persona tool in `mode: "chat"`, which needs a configured AI provider (unlike the direct `celeste_*` codegraph tools, this one is not local-only). If a call errors or returns empty, run `celeste_status` to confirm providers are loaded, or set a key with `celeste config --set-key <KEY>` on the command line.
+**Requires celeste-cli v2.0.0+** — uses the `celeste` persona tool in `mode: "chat"`, which needs a configured AI provider (unlike the direct `celeste_*` codegraph tools, this one is not local-only). In 2.0, celeste edits an existing file only after reading it in the same session, and each MCP chat call starts with no files read — so every prompt below that patches a file also tells Celeste to read it first. If a call errors or returns empty, run `celeste_status` to confirm providers are loaded, or set a key with `celeste config --set-key <KEY>` on the command line.
 
 **Key distinction:**
 - `celeste-docs` (this skill) — maintains files that already exist, preventing drift and destructive rewrites
@@ -43,7 +43,7 @@ For each stale file, do NOT ask Celeste to rewrite the whole file. Instead, proc
 
 ```json
 {
-  "prompt": "Use patch_file to update only the title and first paragraph of docs/<FILE>.md — add personality. Do not touch anything else.",
+  "prompt": "Read docs/<FILE>.md, then use patch_file to update only its title and first paragraph — add personality. Do not touch anything else.",
   "mode": "chat",
   "workspace": "$CWD"
 }

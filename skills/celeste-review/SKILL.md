@@ -1,13 +1,13 @@
 ---
 name: celeste-review
-description: Use when you need structural code review that finds stubs, lazy redirects, placeholders, swallowed errors, TODOs, and hardcoded values via call-graph analysis instead of grep — requires celeste-cli v1.9.0+ and calls the direct celeste_code_review MCP tool for verbatim results
+description: Use when you need structural code review that finds stubs, lazy redirects, placeholders, swallowed errors, TODOs, and hardcoded values via call-graph analysis instead of grep — requires celeste-cli v2.0.0+ and calls the direct celeste_code_review MCP tool for verbatim results
 ---
 
 # Celeste Code Review
 
 Run Celeste's graph-based code review on the current project. Uses structural analysis of the code graph — not grep — to detect issues that pattern matching alone can't find.
 
-**Requires celeste-cli v1.9.0+** — uses the direct `celeste_code_review` MCP tool (no chat-LLM round-trip, no output truncation).
+**Requires celeste-cli v2.0.0+** — uses the direct `celeste_code_review` MCP tool (no chat-LLM round-trip, no output truncation).
 
 ## Instructions
 

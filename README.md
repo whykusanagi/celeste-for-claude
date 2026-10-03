@@ -8,7 +8,7 @@
 
 **Graph-based code intelligence for Claude Code via MCP**
 
-[![Requires Celeste CLI](https://img.shields.io/badge/requires-celeste--cli%20v1.9.0+-purple)](https://github.com/whykusanagi/celeste-cli)
+[![Requires Celeste CLI](https://img.shields.io/badge/requires-celeste--cli%20v2.0.0+-purple)](https://github.com/whykusanagi/celeste-cli)
 [![MCP](https://img.shields.io/badge/transport-MCP%20stdio-00d4ff)](https://modelcontextprotocol.io)
 [![License](https://img.shields.io/badge/License-MIT-purple)](LICENSE)
 
@@ -18,7 +18,7 @@
 
 Give Claude Code access to [Celeste CLI](https://github.com/whykusanagi/celeste-cli)'s graph-based code intelligence — structural code review, semantic search, dependency analysis, and project context management that goes beyond grep and pattern matching.
 
-**v1.9.0+:** Skills now use Celeste's **direct codegraph MCP tools** (`celeste_index`, `celeste_code_search`, `celeste_code_review`, `celeste_code_graph`, `celeste_code_symbols`) instead of routing through the chat persona. Results come back verbatim and structured, with no LLM round-trip and no output truncation.
+Since celeste v1.9.0, the skills use Celeste's **direct codegraph MCP tools** (`celeste_index`, `celeste_code_search`, `celeste_code_review`, `celeste_code_graph`, `celeste_code_symbols`) instead of routing through the chat persona. Results come back verbatim and structured, with no LLM round-trip and no output truncation.
 
 ## What You Get
 
@@ -34,15 +34,25 @@ Celeste brings capabilities Claude Code doesn't have natively:
 
 ## Prerequisites
 
-Install [Celeste CLI](https://github.com/whykusanagi/celeste-cli) (v1.9.0+). Two options:
+Install [Celeste CLI](https://github.com/whykusanagi/celeste-cli) **v2.0.0+**. 2.0
+moved the Go module to `/v2`, so the install path changed:
 
 ```bash
 # Quick: installs to ~/go/bin (must be on your PATH)
-go install github.com/whykusanagi/celeste-cli/cmd/celeste@latest
+go install github.com/whykusanagi/celeste-cli/v2/cmd/celeste@latest
+
+# Or download a signed binary from the Releases page and verify it as described
+# in celeste-cli's VERIFY.md:
+#   https://github.com/whykusanagi/celeste-cli/releases
 
 # Or from a checkout: installs to ~/.local/bin and code-signs (macOS-safe)
 git clone https://github.com/whykusanagi/celeste-cli.git && cd celeste-cli && make install
 ```
+
+> The old path without `/v2` (`go install …/celeste-cli/cmd/celeste@latest`) still
+> installs the last **1.x** release, never 2.0. If you're upgrading from 1.x, read
+> celeste-cli's [MIGRATING-2.0.md](https://github.com/whykusanagi/celeste-cli/blob/main/MIGRATING-2.0.md)
+> and back up `~/.celeste` first.
 
 > Whichever you pick, the install directory must be on your `PATH`, and it must
 > match the binary your MCP client launches. On macOS, don't `cp` over an existing
@@ -50,12 +60,23 @@ git clone https://github.com/whykusanagi/celeste-cli.git && cd celeste-cli && ma
 
 Verify:
 ```bash
-celeste version
-celeste index status   # in any project directory
+celeste version          # prints 2.x
+celeste update           # a `go install` build: installs the official signed binary
+celeste persona verify   # official persona: ...
+celeste index status     # in any project directory
 ```
 
-You'll need an API key configured only if you use the persona tools (xAI/Grok by
-default). The direct codegraph tools (`celeste_index`, `celeste_code_search`, etc.)
+A `go install` build upgrades itself to the official release binary of the same
+version the first time it runs a command (`celeste update` does it explicitly);
+set `CELESTE_NO_AUTO_UPGRADE=1` to keep the binary `go install` built. Only
+official binaries run Celeste's full persona; a build from a checkout or a fork
+runs a short public persona instead, which affects the persona-voiced tools
+(`celeste`, `celeste_content`) but not the codegraph tools. `celeste serve`
+never replaces itself mid-run, so run `celeste update` once before wiring the
+MCP server.
+
+You'll need an API key configured only if you use the persona tools (Sakana/Fugu
+by default). The direct codegraph tools (`celeste_index`, `celeste_code_search`, etc.)
 run locally and need no key.
 
 ```bash
@@ -93,7 +114,7 @@ installs itself: `celeste mcp install` self-locates the binary and merges an
 entry into `~/Library/Application Support/Claude/claude_desktop_config.json`.
 
 ```bash
-celeste mcp install                # requires celeste v1.12.1+
+celeste mcp install
 celeste mcp install --dry-run      # preview without writing
 celeste mcp install --client all   # also wire Claude Code, Cursor, Celeste
 ```
@@ -111,8 +132,8 @@ the binary (it repairs the path). Then fully quit and reopen Claude Desktop
 }
 ```
 
-> **On celeste older than v1.12.1**, use the bundled `./install.sh` instead — same
-> behavior, superseded by the built-in command:
+> The bundled `./install.sh` does the same for Claude Desktop. It predates
+> `celeste mcp install`, which supersedes it:
 > ```bash
 > git clone https://github.com/whykusanagi/celeste-for-claude.git
 > cd celeste-for-claude && ./install.sh   # --dry-run to preview
@@ -219,11 +240,21 @@ grep finds text. Celeste understands structure.
 
 Celeste uses her own config (`~/.celeste/config.json`) for API keys and model settings. She runs independently of Claude Code's configuration.
 
-To change Celeste's model:
+A fresh install points at Sakana (`https://api.sakana.ai/v1`, model `fugu`), so
+you only need a key. To change Celeste's model:
 ```bash
-celeste config --set-model grok-4-1-fast   # default
-celeste config --set-model claude-sonnet-4-5
+celeste config --set-model fugu-ultra   # default is fugu
 ```
+
+Other providers (`celeste config --init openai`, `grok`, `venice`, ...) are
+covered in celeste-cli's README. If you switch to xAI/Grok, set the URL too
+(`celeste config --set-url https://api.x.ai/v1`), or your key goes to Sakana.
+
+### Editors other than Claude
+
+celeste 2.0 also ships `celeste acp`, an Agent Client Protocol agent for Zed and
+JetBrains IDEs. This plugin doesn't use it; see celeste-cli's
+[docs/ACP.md](https://github.com/whykusanagi/celeste-cli/blob/main/docs/ACP.md).
 
 ## License
 
