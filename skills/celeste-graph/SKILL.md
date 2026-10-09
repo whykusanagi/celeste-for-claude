@@ -24,7 +24,7 @@ Call celeste_code_graph with: { "symbol": "<SYMBOL>", "direction": "both", "dept
 ```
 
 **Parameters:**
-- `symbol` (required) — a name or a qualified name. If you only know the concept, run `celeste_code_search` first and use the result's name; use its `file:line` to pick the right one if several share the name.
+- `symbol` (required) — a name or a qualified name. If you only know the concept, run `celeste_code_search` first and use the result's name. If several symbols share it, the answer prints each one's qualified name with its `file:line`; query again with the qualified name whose `file:line` matches. A trailing `:line` on a qualified name (`pkg/core.add:9`) picks one of several declared in the same file. A bare `file:line` is not a symbol.
 - `direction` — `"callers"`, `"callees"` or `"both"` (default).
 - `depth` — hops to walk (default 1, max 3). Start at 1; use 2 or 3 to see how a change propagates.
 - `workspace` — absolute project root (see Workspace below).

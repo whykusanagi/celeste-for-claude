@@ -54,7 +54,7 @@ How to weigh a result:
 
 ### Step 3: Read the top results
 
-Read the top 3-5 result files yourself (Read tool). The search says WHERE the code is; reading it says WHAT it does. To trace a result's callers, pass its name or `file:line` to the celeste-graph skill.
+Read the top 3-5 result files yourself (Read tool). The search says WHERE the code is; reading it says WHAT it does. To trace a result's callers, pass its name to the celeste-graph skill; if several symbols share it, pick the qualified name whose `file:line` matches.
 
 ## Examples
 
