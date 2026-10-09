@@ -19,7 +19,7 @@ Keep existing documentation accurate as the code changes. Claude finds the stale
 - **A ranged read counts.** Any `read_file` of the file counts as the read, even a narrow `start_line`/`end_line` range. A whole-file read is never needed to edit.
 - **Reads are capped, but they add up.** One `read_file` result is at most 48 KiB, and it reads at most a 512 KB prefix of the file. A capped result says `"truncated": true` and gives `total_lines`, `total_bytes` and `next_offset_line`. Several large reads in one call still fill the context, and that is how a session crashes. Keep every read small.
 - **25 turns per call.** An MCP chat call stops after 25 turns, or earlier when it stalls (the same call repeated, or no progress). One file per call stays well inside that.
-- **Her voice stays out of files.** In 2.0 Celeste's voice applies only to prose addressed to you. File contents, code, comments, commit messages and tool arguments are plain. Don't ask her to add personality to a doc. If you want flavoured text in a file, see Step 5.
+- **Her voice stays out of files.** In 2.0 Celeste's voice applies only to prose addressed to you. File contents, code, comments, commit messages and tool arguments are plain. Don't ask her to add personality to a doc. If you want flavoured text in a file, see "Flavoured text" below.
 
 ## Instructions
 
