@@ -1,5 +1,10 @@
 # Install Standardization Implementation Plan
 
+> **Superseded.** This plan shipped in v1.x and is kept for history. celeste-cli
+> 2.0 installs itself into Claude Desktop (`celeste mcp install --client
+> claude-desktop`) and moved its Go module to `/v2`; see README.md and
+> INSTALL.md for the current install steps.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Fix the Claude Desktop "Failed to spawn process" bug by making `celeste-for-claude` wire its own MCP server the standard way (plugin + marketplace), shipping a re-runnable installer that writes the binary's absolute path, and rewriting the docs to kill the fabricated config path.

@@ -8,7 +8,12 @@
 #   ./install.sh --client claude-code       # only if NOT using the plugin
 #   ./install.sh --client all
 #   ./install.sh --dry-run                  # show changes, write nothing
+#
+# Requires celeste-cli 2.0.0 or later. celeste 2.0 can do this itself:
+#   celeste mcp install --client claude-desktop
 set -euo pipefail
+
+MIN_MAJOR=2
 
 SERVER_NAME="celeste"
 CLIENT="claude-desktop"
@@ -18,10 +23,14 @@ usage() {
   cat <<'EOF'
 Usage: ./install.sh [--client claude-desktop|claude-code|all] [--dry-run] [--help]
 
-Resolves the absolute path to the `celeste` binary and merges a `celeste`
-MCP server entry into each client config (preserving your other servers,
-backing up to <file>.bak first). Default: claude-desktop. Re-run after any
-reinstall to repair a stale path.
+Resolves the absolute path to the `celeste` binary, checks that it is
+celeste-cli 2.0.0 or later, and merges a `celeste` MCP server entry into each
+client config (preserving your other servers, backing up to <file>.bak
+first). Default: claude-desktop. Re-run after any reinstall to repair a
+stale path.
+
+celeste 2.0 does the same itself: celeste mcp install --client claude-desktop
+(a bare `celeste mcp install` writes every installed client's config).
 
 Note: Claude Code is normally wired by the celeste-for-claude plugin's
 .mcp.json — only use --client claude-code / all if you register the MCP
@@ -62,16 +71,33 @@ resolve_celeste() {
 
 if ! CELESTE_BIN="$(resolve_celeste)"; then
   cat >&2 <<'EOF'
-celeste binary not found. Install it first:
-    go install github.com/whykusanagi/celeste-cli/cmd/celeste@latest   # -> ~/go/bin
-  or from a celeste-cli checkout:
-    make install                                                       # -> ~/.local/bin (codesigned)
+celeste binary not found. Install celeste-cli 2.0.0 or later first:
+    go install github.com/whykusanagi/celeste-cli/v2/cmd/celeste@latest   # Go 1.26+, -> ~/go/bin
+  or download a signed binary from https://github.com/whykusanagi/celeste-cli/releases
   Ensure that directory is on your PATH, then re-run ./install.sh
+  (The path without /v2 installs the last 1.x release, which this plugin no longer supports.)
 EOF
   exit 1
 fi
 
-echo "celeste : $CELESTE_BIN"
+# `celeste version` prints "Celeste CLI <version> (<build>) [<commit>]". It is
+# one of the commands a `go install` build runs without upgrading itself.
+CELESTE_VERSION="$("$CELESTE_BIN" version 2>/dev/null | sed -n 's/^Celeste CLI \([0-9][0-9.]*\).*/\1/p' | head -n 1 || true)"
+CELESTE_MAJOR="${CELESTE_VERSION%%.*}"
+case "$CELESTE_MAJOR" in ''|*[!0-9]*) CELESTE_MAJOR="" ;; esac
+if [ -z "$CELESTE_MAJOR" ] || [ "$CELESTE_MAJOR" -lt "$MIN_MAJOR" ]; then
+  cat >&2 <<EOF
+$CELESTE_BIN is celeste ${CELESTE_VERSION:-of an unknown version}; this plugin needs celeste-cli 2.0.0 or later.
+Upgrade it:
+    go install github.com/whykusanagi/celeste-cli/v2/cmd/celeste@latest
+  or download a signed binary from https://github.com/whykusanagi/celeste-cli/releases
+  The path without /v2 installs the last 1.x release. For celeste-cli 1.x,
+  use celeste-for-claude v1.11.0 instead.
+EOF
+  exit 1
+fi
+
+echo "celeste : $CELESTE_BIN ($CELESTE_VERSION)"
 echo "client  : $CLIENT"
 echo "mode    : $([ "$DRY_RUN" = 1 ] && echo dry-run || echo write)"
 echo
