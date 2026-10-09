@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Tests for install.sh. Runs it against a sandboxed $HOME with a fake celeste
-# binary; asserts merge / backup / idempotency / symlink / resolution behavior.
+# binary; asserts merge / backup / idempotency / symlink / resolution /
+# minimum-version behavior.
 # No -e: tests must keep running after a `fail` to report all results.
 set -uo pipefail
 
@@ -10,10 +11,16 @@ PASS=0; FAIL=0
 fail() { echo "  FAIL: $1"; FAIL=$((FAIL+1)); }
 ok()   { echo "  ok:   $1"; PASS=$((PASS+1)); }
 
+# fake_celeste <path> [version-line]: a stub that answers `celeste version`.
+fake_celeste() {
+  printf '#!/bin/sh\necho "%s"\n' "${2:-Celeste CLI 2.0.0 (bubbletea-tui) [abc1234]}" > "$1"
+  chmod +x "$1"
+}
+
 new_sandbox() {
   SBX="$(mktemp -d)"; trap 'rm -rf "$SBX"' EXIT
   FAKEBIN="$SBX/fakebin"; mkdir -p "$FAKEBIN"
-  printf '#!/bin/sh\necho celeste\n' > "$FAKEBIN/celeste"; chmod +x "$FAKEBIN/celeste"
+  fake_celeste "$FAKEBIN/celeste"
   DESKTOP="$SBX/Library/Application Support/Claude/claude_desktop_config.json"
 }
 run() { HOME="$SBX" PATH="$FAKEBIN:$PATH" bash "$INSTALL" "$@"; }
@@ -70,7 +77,7 @@ python3 -c 'import json,sys;sys.exit(0 if "celeste" not in json.load(open(sys.ar
 echo "Test 7: resolves ~/.local/bin when not on PATH"
 new_sandbox
 mkdir -p "$SBX/.local/bin"
-printf '#!/bin/sh\necho celeste\n' > "$SBX/.local/bin/celeste"; chmod +x "$SBX/.local/bin/celeste"
+fake_celeste "$SBX/.local/bin/celeste"
 out="$(HOME="$SBX" PATH="/usr/bin:/bin" bash "$INSTALL" --client claude-desktop 2>&1)" || true
 echo "$out" | grep -q "/.local/bin/celeste" && ok "resolved ~/.local/bin/celeste" || fail "did not resolve ~/.local/bin: $out"
 
@@ -80,6 +87,31 @@ printf '{\n  "numStartups": 7,\n  "mcpServers": {\n    "other": {"command": "x",
 run --client claude-code >/dev/null 2>&1
 python3 -c 'import json,sys;d=json.load(open(sys.argv[1]));m=d["mcpServers"];assert d.get("numStartups")==7 and "other" in m and m["celeste"]["command"].startswith("/") and m["celeste"]["args"]==["serve"]' "$SBX/.claude.json" \
   && ok "claude-code path preserves top-level keys + other servers, adds celeste" || fail "claude-code path wrong"
+
+echo "Test 9: celeste 1.x -> non-zero exit, names the /v2 path, no config written"
+new_sandbox
+fake_celeste "$FAKEBIN/celeste" "Celeste CLI 1.15.0 (bubbletea-tui) [4078dec]"
+if out="$(run --client claude-desktop 2>&1)"; then
+  fail "expected non-zero exit for celeste 1.x"; else ok "exits non-zero for 1.x"; fi
+echo "$out" | grep -q "celeste-cli/v2/cmd/celeste@latest" && ok "hint names the /v2 install path" || fail "no /v2 hint: $out"
+[ -f "$DESKTOP" ] && fail "config written for 1.x" || ok "no config written for 1.x"
+
+echo "Test 10: unrecognised version output -> non-zero exit, no config written"
+new_sandbox
+fake_celeste "$FAKEBIN/celeste" "celeste"
+if run --client claude-desktop >/dev/null 2>&1; then
+  fail "expected non-zero exit for unknown version"; else ok "exits non-zero for unknown version"; fi
+[ -f "$DESKTOP" ] && fail "config written for unknown version" || ok "no config written for unknown version"
+
+echo "Test 11: celeste 2.x and later accepted"
+for v in "Celeste CLI 2.3.1 (bubbletea-tui)" "Celeste CLI 10.0.0 (bubbletea-tui) [abc1234]"; do
+  new_sandbox
+  fake_celeste "$FAKEBIN/celeste" "$v"
+  run --client claude-desktop >/dev/null 2>&1 && [ -f "$DESKTOP" ] && ok "accepted: $v" || fail "rejected: $v"
+done
+
+echo "Test 12: no hint in install.sh uses the pre-2.0 path"
+grep -n 'celeste-cli/cmd/celeste' "$INSTALL" >/dev/null && fail "install.sh still names the path without /v2" || ok "install.sh names only the /v2 path"
 
 echo
 echo "PASS=$PASS FAIL=$FAIL"

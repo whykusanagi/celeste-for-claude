@@ -1,7 +1,7 @@
 # Install standardization for celeste-for-claude
 
 **Date:** 2026-06-09
-**Status:** Draft — awaiting review
+**Status:** Superseded — implemented in v1.x; for celeste-cli 2.0, see README.md and INSTALL.md
 **Scope:** `celeste-for-claude` repo only. No `celeste-cli` changes (v1.10 shipped).
 **Branch:** `docs/install-standardization`
 

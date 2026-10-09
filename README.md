@@ -28,60 +28,92 @@ Celeste brings capabilities Claude Code doesn't have natively:
 |---|---|---|
 | **Graph Code Review** | Detect stubs, lazy redirects, error swallowing, placeholders, hardcoded values | Structural analysis via code graph — not grep |
 | **Semantic Code Search** | Find functions by concept, not just name | MinHash + BM25 fusion with structural rerank |
-| **Dependency Analysis** | Map package connectivity, find isolated code | Cross-file edge resolution (tree-sitter for TS) |
+| **Dependency Analysis** | Map package connectivity, find isolated code | Cross-file edge resolution: go/ast for Go; tree-sitter for TypeScript/JavaScript, PHP, Python, Rust, Java, C/C++ and Ruby in release binaries |
 | **Project Memory** | Persist learned context across sessions | Per-project memory store |
-| **`.grimoire` Context** | Auto-detected project config with staleness tracking | Git-stamped metadata |
+| **`.grimoire` Context** | Project config with staleness tracking, created by `celeste init` | Git-stamped metadata |
+
+> An index built by celeste 1.x skipped Java, C, C++ and Ruby files, and a 1.x
+> release binary parsed the other non-Go languages with regex. Rebuild it once
+> after upgrading:
+> `celeste index rebuild` in the project, or `celeste_index` with
+> `operation: "rebuild"`.
+
+## Versions
+
+Pick the companion release that matches your celeste-cli:
+
+| Companion | For celeste-cli | Install celeste-cli | Add the plugin marketplace |
+|---|---|---|---|
+| **v2.0.0** (current) | 2.0.0 or later | `go install github.com/whykusanagi/celeste-cli/v2/cmd/celeste@latest`, or a signed binary from [Releases](https://github.com/whykusanagi/celeste-cli/releases) | `/plugin marketplace add whykusanagi/celeste-for-claude` |
+| v1.11.0 | 1.9.0 up to the last 1.x | `go install github.com/whykusanagi/celeste-cli/cmd/celeste@latest` (the path without `/v2` installs the newest 1.x) | `/plugin marketplace add https://github.com/whykusanagi/celeste-for-claude.git#v1.11.0` |
+
+Then run `/plugin install celeste-for-claude` for either one. To use the skills
+without the plugin on 1.x, clone the tag instead:
+`git clone --branch v1.11.0 https://github.com/whykusanagi/celeste-for-claude.git`.
+
+The rest of this README covers v2.0.0. Upgrading celeste from 1.x? Read
+celeste-cli's [MIGRATING-2.0.md](https://github.com/whykusanagi/celeste-cli/blob/main/MIGRATING-2.0.md)
+and back up `~/.celeste` first.
 
 ## Prerequisites
 
-Install [Celeste CLI](https://github.com/whykusanagi/celeste-cli) **v2.0.0+**. 2.0
-moved the Go module to `/v2`, so the install path changed:
+Install [Celeste CLI](https://github.com/whykusanagi/celeste-cli) **v2.0.0 or
+later**. 2.0 moved the Go module to `/v2`, so the install path changed.
+
+**Recommended — `go install` (Go 1.26+).** It installs to `~/go/bin`, which must
+be on your `PATH`:
 
 ```bash
-# Quick: installs to ~/go/bin (must be on your PATH)
 go install github.com/whykusanagi/celeste-cli/v2/cmd/celeste@latest
+```
 
-# Or download a signed binary from the Releases page and verify it as described
-# in celeste-cli's VERIFY.md:
-#   https://github.com/whykusanagi/celeste-cli/releases
+**No Go?** Download a signed binary from the
+[Releases page](https://github.com/whykusanagi/celeste-cli/releases) and verify it
+as described in celeste-cli's
+[VERIFY.md](https://github.com/whykusanagi/celeste-cli/blob/main/VERIFY.md).
 
-# Or from a checkout: installs to ~/.local/bin and code-signs (macOS-safe)
+> The old path without `/v2` (`go install …/celeste-cli/cmd/celeste@latest`) still
+> installs the last **1.x** release, never 2.0.
+
+**For contributors (public persona).** `make install` from a checkout installs to
+`~/.local/bin` and code-signs the binary (macOS-safe). A checkout build runs the
+short public persona and never upgrades itself to the official binary, so use it
+only if you work on celeste-cli:
+
+```bash
 git clone https://github.com/whykusanagi/celeste-cli.git && cd celeste-cli && make install
 ```
 
-> The old path without `/v2` (`go install …/celeste-cli/cmd/celeste@latest`) still
-> installs the last **1.x** release, never 2.0. If you're upgrading from 1.x, read
-> celeste-cli's [MIGRATING-2.0.md](https://github.com/whykusanagi/celeste-cli/blob/main/MIGRATING-2.0.md)
-> and back up `~/.celeste` first.
-
 > Whichever you pick, the install directory must be on your `PATH`, and it must
 > match the binary your MCP client launches. On macOS, don't `cp` over an existing
-> `~/.local/bin/celeste` — that breaks its code signature; use `make install`.
+> `~/.local/bin/celeste` — that breaks its code signature.
 
 Verify:
 ```bash
-celeste version          # prints 2.x
-celeste update           # a `go install` build: installs the official signed binary
-celeste persona verify   # official persona: ...
+celeste version          # Celeste CLI 2.x.y ...
+celeste update           # a `go install` build: swaps in the official signed binary
+celeste persona verify   # exits 0 ("official persona: ...") on an official build
 celeste index status     # in any project directory
 ```
 
-A `go install` build upgrades itself to the official release binary of the same
-version the first time it runs a command (`celeste update` does it explicitly);
-set `CELESTE_NO_AUTO_UPGRADE=1` to keep the binary `go install` built. Only
-official binaries run Celeste's full persona; a build from a checkout or a fork
-runs a short public persona instead, which affects the persona-voiced tools
-(`celeste`, `celeste_content`) but not the codegraph tools. `celeste serve`
-never replaces itself mid-run, so run `celeste update` once before wiring the
-MCP server.
+A `go install` build swaps itself for the official signed release binary of the
+same version the first time it runs a command; `celeste update` does it
+explicitly. Set `CELESTE_NO_AUTO_UPGRADE=1` to keep the binary `go install`
+built. Only official binaries run Celeste's full persona: on any other build
+`celeste persona verify` exits 1 and names the reason, and the persona-voiced
+tools (`celeste`, `celeste_content`) use the public persona. The codegraph tools
+work the same on every build. `celeste serve` never replaces itself mid-run, so
+run `celeste update` once before wiring the MCP server.
 
-You'll need an API key configured only if you use the persona tools (Sakana/Fugu
-by default). The direct codegraph tools (`celeste_index`, `celeste_code_search`, etc.)
-run locally and need no key.
+You'll need an API key configured only if you use the persona tools (Sakana
+`fugu` by default). The direct codegraph tools (`celeste_index`,
+`celeste_code_search`, etc.) run locally and need no key.
 
 ```bash
-celeste config --set-key YOUR_API_KEY   # only for persona tools
+celeste config --set-key YOUR_SAKANA_KEY   # only for persona tools
 ```
+
+See [Configuration](#configuration) to use another provider.
 
 ## Installation
 
@@ -110,19 +142,26 @@ claude mcp add celeste --scope user -- celeste serve
 **Claude Desktop** (GUI — does **not** inherit your shell `PATH`):
 Claude Desktop launches the server without your shell environment, so a bare
 `celeste` won't be found — it needs the binary's **absolute** path. Celeste
-installs itself: `celeste mcp install` self-locates the binary and merges an
-entry into `~/Library/Application Support/Claude/claude_desktop_config.json`.
+installs itself: `celeste mcp install --client claude-desktop` self-locates the
+binary and merges an entry into
+`~/Library/Application Support/Claude/claude_desktop_config.json`.
 
 ```bash
-celeste mcp install
-celeste mcp install --dry-run      # preview without writing
-celeste mcp install --client all   # also wire Claude Code, Cursor, Celeste
+celeste mcp install --client claude-desktop             # Claude Desktop only
+celeste mcp install --client claude-desktop --dry-run   # preview without writing
 ```
 
-It preserves any other MCP servers, backs the file up to `.bak`, refuses to
-write through a symlink, and is safe to **re-run** any time you reinstall or move
-the binary (it repairs the path). Then fully quit and reopen Claude Desktop
-(Cmd-Q) to load it. The resulting entry looks like:
+> Pass `--client claude-desktop`. A bare `celeste mcp install` defaults to
+> `--client all` and writes the config of every installed client: Claude
+> Desktop, Claude Code (`~/.claude.json`), Cursor and celeste's own
+> `~/.celeste/mcp.json`. With the plugin installed, the Claude Code entry
+> duplicates the plugin's server.
+
+It preserves any other MCP servers, backs the file up to `.bak`, writes it
+readable by you only (0600), never writes through a symlink, and is safe to
+**re-run** any time you reinstall or move the binary (it repairs the path). Then
+fully quit and reopen Claude Desktop (Cmd-Q) to load it. The resulting entry
+looks like:
 
 ```json
 {
@@ -132,8 +171,8 @@ the binary (it repairs the path). Then fully quit and reopen Claude Desktop
 }
 ```
 
-> The bundled `./install.sh` does the same for Claude Desktop. It predates
-> `celeste mcp install`, which supersedes it:
+> This repo's `./install.sh` does the same for Claude Desktop and also refuses a
+> celeste older than 2.0. `celeste mcp install` supersedes it:
 > ```bash
 > git clone https://github.com/whykusanagi/celeste-for-claude.git
 > cd celeste-for-claude && ./install.sh   # --dry-run to preview
@@ -157,7 +196,7 @@ cp -R celeste-for-claude/skills/* ~/.claude/skills/
 
 Runs Celeste's structural code review on the current project. Detects 6 categories of issues using the code graph (not grep):
 
-- **STUB** — Functions with zero outgoing calls that aren't constructors/getters
+- **STUB** — A function with **no callers and a stub body**: empty, TODO-only, or only raising "not implemented". One-liners, functions that return a literal, and functions with callers are never STUBs. The `reason` says "likely dead code" unless the function is reached another way (an entry point, a test, an interface or trait implementation, an override, a decorator, a build-constrained file, or a library's exported API), which it names instead
 - **LAZY_REDIRECT** — Handlers that say "run X command" instead of doing the work
 - **PLACEHOLDER** — "Not implemented" functions with empty bodies
 - **TODO_FIXME** — Unfinished work markers, scored by call graph impact
@@ -180,7 +219,7 @@ Analyze package-level dependencies and find connectivity patterns.
 
 ### `celeste-context` — Project Context Setup
 
-Have Celeste index the project, create/update `.grimoire`, and save memories about the project structure.
+Have Celeste index the project, save memories about the project structure, and update `.grimoire` if the project has one (`celeste init` creates it; celeste 2.0 no longer creates it on its own).
 
 **Invoke:** ask Claude to "set up Celeste project context here."
 
@@ -241,14 +280,36 @@ grep finds text. Celeste understands structure.
 Celeste uses her own config (`~/.celeste/config.json`) for API keys and model settings. She runs independently of Claude Code's configuration.
 
 A fresh install points at Sakana (`https://api.sakana.ai/v1`, model `fugu`), so
-you only need a key. To change Celeste's model:
+you only need a key. To change the model:
 ```bash
 celeste config --set-model fugu-ultra   # default is fugu
 ```
 
-Other providers (`celeste config --init openai`, `grok`, `venice`, ...) are
-covered in celeste-cli's README. If you switch to xAI/Grok, set the URL too
-(`celeste config --set-url https://api.x.ai/v1`), or your key goes to Sakana.
+A config still set to the retired `grok-4-1-fast` is moved to a supported Grok
+model automatically when it loads.
+
+To use another provider, create a profile for it, set its key, and make it the
+default (providers: `openai`, `grok`, `venice`, `sakana`, `digitalocean`):
+```bash
+celeste config --init grok
+celeste -config grok config --set-key YOUR_XAI_KEY
+celeste -config grok config --set-default
+```
+
+`CELESTE_API_KEY` and `CELESTE_API_ENDPOINT` override the config file's key and
+URL for `celeste serve` (and the CLI) for that run only; they are never written
+to the config. An old export of either in your shell profile wins over the
+config file, so unset it if the MCP server talks to the wrong provider.
+`celeste_status` reports the `provider` and `model` the server is using.
+
+### What the `celeste` tool loads
+
+The persona tool (`celeste`, MCP chat) runs on celeste's full tool loop, but
+only with your **home-level** MCP servers (`~/.celeste/mcp.json`,
+`~/.claude/mcp.json`, `~/.cursor/mcp.json`); a repository's `.mcp.json` starts
+only in celeste's interactive chat. A repository's hooks (`.celeste/hooks.json`
+or `.grimoire` hooks) are skipped in MCP chat until you approve them from that
+repository with `celeste hooks trust` (`celeste hooks list` shows their status).
 
 ### Editors other than Claude
 
